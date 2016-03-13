@@ -117,9 +117,9 @@ def get_label_ranks(s, player):
 
     # <0, 25>
     o,e = o+5, e+5
-    a = np.zeros((2, 26), dtype='uint8')
-    a[0][o] = 1
-    a[1][e] = 1
+    a = np.zeros((2, 1), dtype='uint8')
+    a[0] = o
+    a[1] = e
 
     return a
 
@@ -265,8 +265,14 @@ def get_cube_detlef(state, player):
     second last move
     third last move
     forth last move
+    all ones
+    move number
+    border mark
+    dist from border
+    dist from friendly stone
+    dist from enemy stone
     """
-    cube = np.zeros((13, state.board.side, state.board.side), dtype='float32')
+    cube = np.zeros((19, state.board.side, state.board.side), dtype='float32')
 
     # count liberties
     string_lib = analyze_board.board2string_lib(state.board)
@@ -291,10 +297,20 @@ def get_cube_detlef(state, player):
 
     # watch out, history gives -1 for empty points
     history = raw_history(state.board, state.history)
-    cube[9]  = 1*(history == 1)
-    cube[10] = 1*(history == 2)
-    cube[11] = 1*(history == 3)
-    cube[12] = 1*(history == 4)
+    cube[9] = 1 * (history == 1)
+    cube[10] = 1 * (history == 2)
+    cube[11] = 1 * (history == 3)
+    cube[12] = 1 * (history == 4)
+    cube[13] = 1
+    cube[14] = history.max()
+
+    cube[15] = get_border_mark(state.board.side)
+    cube[16] = np.exp(-0.5 * get_sqd_from_center(state.board.side))
+
+    # distances from stones ~ cfg
+    dist_friend, dist_enemy = analyze_board.board2dist_from_stones(state.board, player)
+    cube[17] = empty * dist_friend
+    cube[18] = empty * dist_enemy
 
     return cube
 
